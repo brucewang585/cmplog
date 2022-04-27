@@ -1,17 +1,22 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 
-	"github.com/brucewang585/cmplog/util/logx"
-	//"github.com/opentracing/opentracing-go"
-	zlog "github.com/zeromicro/go-zero/core/logx"
-	//"go.opentelemetry.io/otel/trace"
 	"os"
 	"time"
 
-	//"github.com/brucewang585/cmplog/mocktracer"
+	"github.com/brucewang585/cmplog/util/logx"
+	zlog "github.com/zeromicro/go-zero/core/logx"
+	ztrace "github.com/brucewang585/cmplog/trace"
+
+	//"go.opentelemetry.io/otel"
+	//"go.opentelemetry.io/otel/trace"
+	//"go.opentelemetry.io/otel/attribute"
+	//"github.com/open-telemetry/opentelemetry-go"
+	//"github.com/open-telemetry/opentelemetry-go/attribute"
 )
 
 var (
@@ -81,6 +86,9 @@ func testFullLog(service string) {
 	tm := time.NewTicker(time.Second)
 	defer tm.Stop()
 
+	tp := ztrace.NewTracerProvider()
+	tracer := tp.Tracer("ex.com/webserver")
+
 	id := 0
 	for {
 		select {
@@ -97,22 +105,21 @@ func testFullLog(service string) {
 			//id += 1
 			//fl.Severef("id:%09d, test severe",id)
 
-			/*
+			ctx, sp := tracer.Start(context.Background(), "parent")
+			//event := fmt.Sprintf("Now: %s", t.Format("2006.01.02 15:04:05"))
+			//span.AddEvent(event, trace.WithAttributes(label.Int("bogons", 100)))
+			//span.SetAttributes(anotherKey.String("yes"))
+			sp.End()
+
 			id += 1
-			span1 := mocktracer.TTracer.StartSpan(
-				"1",
-				opentracing.Tags(map[string]interface{}{"x": "y"}))
+			dd,_ := sp.SpanContext().MarshalJSON()
+			fl.WithDuration(time.Second).WithContext(ctx).Infof("id:%09d, test trace-parent,info:%s",id,string(dd))
 
-			span2 := span1.Tracer().StartSpan(
-				"1.1", opentracing.ChildOf(span1.Context()))
-			span2.Finish()
-			span1.Finish()
-
-			context.Background()
-
-			fl.WithDuration(time.Second).WithContext(trace.ContextWithSpan(context.Background(),span1))
-			fl.WithDuration(time.Second).WithContext(trace.ContextWithSpan(span2))
-			*/
+			ctx, sc := tracer.Start(ctx, "child")
+			sc.End()
+			id += 1
+			dd,_ = sc.SpanContext().MarshalJSON()
+			fl.WithDuration(time.Second).WithContext(ctx).Infof("id:%09d, test trace-child,info:%s",id,string(dd))
 		}
 	}
 
