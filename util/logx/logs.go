@@ -2,6 +2,7 @@ package logx
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,9 +20,9 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/iox"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/sysx"
 	"github.com/zeromicro/go-zero/core/timex"
-	"github.com/zeromicro/go-zero/core/logx"
 )
 
 const (
@@ -120,6 +121,22 @@ type (
 		Slowf(string, ...interface{})
 		Slowv(interface{})
 		WithDuration(time.Duration) Logger
+	}
+
+	FullLogger interface {
+		Error(...interface{})
+		Errorf(string, ...interface{})
+		Info(...interface{})
+		Infof(string, ...interface{})
+		Slow(...interface{})
+		Slowf(string, ...interface{})
+		Severe(...interface{})
+		Severef(string, ...interface{})
+
+		SetLevel(level uint32)
+		WithDuration(time.Duration) FullLogger
+		WithContext(ctx context.Context) FullLogger
+		Close() error
 	}
 )
 
